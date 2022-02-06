@@ -21,22 +21,22 @@ def hamming_distance(x, y):
 
 
 def check_identical(entry: Dict[str, Dict[str, Any]], page: Dict[str, Any]) -> bool:
-        for key, val in [(k,v) for k,v in page.items() if k not in ['id', 'Institutions', 'Date', 'Code']]:
-            # If the paper is marked as "Reading" in Notion and still "To Read" in Paperpile, it is not updated
-            if key == 'Status' and val == 'Reading' and key not in entry.keys():
-            	continue
-            if isinstance(val, str):
-                try:
-                    if entry[key]['value'] != val:
-                        print(f"Found mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
-                        return False
-                except KeyError:
-                    raise AttributeError(f"Attribute {key} found with value {val} in Notion, but missing in Paperpile.")
-            elif isinstance(val, list):
-                if any([x not in val for x in entry[key]['value']]):
-                    print(f"[bright_magenta]Found[/bright_magenta] mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
+    for key, val in [(k,v) for k,v in page.items() if k not in ['id', 'Institutions', 'Date', 'Code', 'Venues', 'Status']]:
+        # If the paper is marked as "Reading" in Notion and still "To Read" in Paperpile, it is not updated
+        # if key == 'Status' and val == 'Reading' and key not in entry.keys():
+        #     continue
+        if isinstance(val, str):
+            try:
+                if entry[key]['value'] != val:
+                    print(f"Found mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
                     return False
-        return True
+            except KeyError:
+                raise AttributeError(f"Attribute {key} found with value {val} in Notion, but missing in Paperpile.")
+        elif isinstance(val, list):
+            if any([x not in val for x in entry[key]['value']]):
+                print(f"[bright_magenta]Found[/bright_magenta] mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
+                return False
+    return True
 
 
 def main(args: argparse.Namespace) -> None:
@@ -68,13 +68,21 @@ def main(args: argparse.Namespace) -> None:
         if len(matches_idxs) > 1:
             print(f'[dark_orange3]Skipping[/dark_orange3] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]: multiple matches found.')
         else:
-            curr_entry = format_entry(row, cfg['journals'], cfg['conferences'])
+            match_curr_entry, curr_entry = format_entry(row, cfg['journals'], cfg['conferences'])
+
+            if match_curr_entry is None and curr_entry is None:
+                print(f'[dark_orange3]Skipping[/dark_orange3] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]: Link not available')
+                continue
+
             if len(matches_idxs) == 0:
                 print(f'[green]Adding[/green] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]...')
-                notion.create_page(curr_entry)
+                try:
+                    notion.create_page(curr_entry)
+                except ValueError as mess:
+                    print(f"Value Error: {mess}")
             else:
                 match = notion.pages[matches_idxs[0]]
-                if not check_identical(curr_entry, match):
+                if not check_identical(match_curr_entry, match):
                     print(f'[bright_magenta]Updating[/bright_magenta] [dodger_blue1]{match["Title"]}[/dodger_blue1]...')
                     notion.update_page(match['id'], curr_entry)
                 else:
