@@ -31,7 +31,7 @@ def check_identical(entry: Dict[str, Dict[str, Any]], page: Dict[str, Any]) -> b
                     print(f"Found mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
                     return False
             except KeyError:
-                raise AttributeError(f"Attribute {key} found with value {val} in Notion, but missing in Paperpile.")
+                print(f"Attribute {key} found with value {val} in Notion, but missing in Paperpile.")
         elif isinstance(val, list):
             if any([x not in val for x in entry[key]['value']]):
                 print(f"[bright_magenta]Found[/bright_magenta] mismatching key '{key}' with values {entry[key]['value']} (Paperpile) and {val} (Notion)")
@@ -70,9 +70,9 @@ def main(args: argparse.Namespace) -> None:
         else:
             match_curr_entry, curr_entry = format_entry(row, cfg['journals'], cfg['conferences'])
 
-            if match_curr_entry is None and curr_entry is None:
-                print(f'[dark_orange3]Skipping[/dark_orange3] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]: Link not available')
-                continue
+            # if match_curr_entry is None and curr_entry is None:
+            #     print(f'[dark_orange3]Skipping[/dark_orange3] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]: Link not available')
+            #     continue
 
             if len(matches_idxs) == 0:
                 print(f'[green]Adding[/green] [dodger_blue1]"{row["Title"]}"[/dodger_blue1]...')

@@ -58,17 +58,29 @@ def format_entry(entry: Dict[str, str], journals: List[Dict[str, str]], conferen
 
     ###################################################
 
-    if selected_link == "":
-        return None, None
-
     ############## DATE #################################
-    date = entry['Date published'].strip() if 'Date published' in entry.keys() else ''
-    if len(date) > 10:
+
+    date = ''
+    if 'Date published' in entry.keys():
+        if entry['Date published'].strip() != '':
+            date = entry['Date published'].strip()
+
+    if date == '':
+        if 'Publication year' in entry.keys():
+            if entry['Publication year'].strip() != '':
+                date = entry['Publication year'].strip() + '-01-01'
+    
+    if len(date) > 10: # YYYY-MM-DD....
         date = date[:10]
-    elif len(date) == 4 or not date:
+
+    if len(date) == 4: # YYYY
         date = entry['Publication year'].strip() + '-01-01'
-    elif len(date) == 7: # YYYY-MM
+    
+    if len(date) == 7: # YYYY-MM
         date = date + '-01'
+    
+    if date == '':
+        date = '2000-01-01'
 
     ######################################################
 
